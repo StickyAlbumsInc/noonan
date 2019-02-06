@@ -138,7 +138,7 @@ if(!is_writable(VHOST_BAD_DOMAINS_DIR)) {
 logMessage("Setup Complete!");
 
 echo "Setup complete! Please add the following lines to your crontab:\n\n";
-echo "0 0 * * * sudo php -q " . getcwd() . "/scripts/certificate_renewer.php";
+echo "0 0 * * * sudo certbot renew";
 echo "0 * * * * sudo php -q " . getcwd() . "/scripts/ssl_installer.php";
 echo "0 2 * * * sudo php -q " . getcwd() . "/scripts/ssl_installer.php --second-chance=true";
 echo "\nImportant: You must be able to run php scripts unattended via sudo.\n";

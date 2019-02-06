@@ -106,6 +106,7 @@ foreach(glob($pending_dir.'*.conf') as $file) {
       } else {
         // Woops, the certificate didn't get installed, for some reason. 
         logMessage("Certificate for $domain was not installed.");
+        logMessage($shell);
         if(!$second_chance) {
           if(rename($file, $bad_file)) {
             if(LOG_LEVEL == 'all') { logMessage("Moved $domain to bad domains directory."); }
