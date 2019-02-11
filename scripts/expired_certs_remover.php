@@ -27,7 +27,7 @@ foreach ($dir as $domain) {
 
     $cert_info = shell_exec("openssl x509 -noout -dates -in " . LE_CERTS_DIR . "$domain/fullchain.pem  2>&1");
     if(!$cert_info) {
-      f(LOG_LEVEL == 'all') { logMessage("Can't read info for for $domain."); }
+      if(LOG_LEVEL == 'all') { logMessage("Can't read info for for $domain."); }
     }
      // Split up the info and discard what we don't need to get the date as text.
     $lines = explode("\n", $cert_info);
