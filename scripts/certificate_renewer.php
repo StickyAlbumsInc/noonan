@@ -1,14 +1,12 @@
 <?php
  /*
   IMPORTANT: Must be ran via sudo.
-  Run: Daily
-
-  This script removes SSL certificates that are 7 days expired.
+  Run: Daily, after running expired_certs_remover.php
+  This script renews SSL certificates that are about to expire. 
   
-  It oops through the Certbot certificate directory to get a list 
-  of installed certificates and checks their expiration dates. If 
-  they expired more than 1 week ago and haven't renewd, it's safe 
-  to assume   that they can't renew, so delete them!
+  It loops through the Certbot certificate directory to get a list of
+  installed certificates and checks their expiration dates. If they
+  expire within the next 24 hours, it does a manual renew/reinstall.
  */
 require 'config.php';
 require 'logger.php';
@@ -37,37 +35,24 @@ foreach ($dir as $domain) {
     // Convert it to a date object.
     $expiry_date = date_create_from_format("M d H:i:s Y e", $text_date);
     
-    // Get tomorrow's date so we can see if the certificate expires before then.
+    // Get future date (3 days from now)
     $current_date = new Datetime();
-    $last_week = $current_date->modify('-7 days');
-    // If it expired 7 or more days ago, remove it.
-    if($expiry_date <= $last_week) {
-      if(LOG_LEVEL == 'all') { logMessage("Removing SSL for $domain."); }
-      $live_domain    = LE_CERTS_DIR . "$domain/";
-      $archive_domain = str_replace('/live/', '/archive/', $live_domain);
-      $renew_domain   = str_replace('/live/', '/renew/', $live_domain);
+    $exp_date = $current_date->modify('+3 days');
 
-      $enabled_cert   = $enabled_domain_dir . $domain . ".conf";
-      $bad_cert       = $bad_domains_dir . $domain . ".conf";
-      $cert_symlink   = $nginx_enabled_dir . $domain . ".conf";
-
-      shell_exec("cp -r $archive_domain $removed_certs_dir");
-      shell_exec("rm -rf $archive_domain $live_domain $renew_domain");
+    // If it's expiring within the next 3 days, renew the certificate.
+    if($expiry_date < $exp_date) {
+      if(LOG_LEVEL == 'all') { logMessage("Renewing SSL for $domain."); }
       try {
-        shell_exec("mv $enabled_cert $bad_domains_dir");
+        shell_exec("certbot certonly -a webroot --webroot-path=/var/www/letsencrypt -m kelli@stickyfolios.com --agree-tos -d=$domain 2>&1");
+        logMessage("Renewed SSL for $domain.");
       } catch (Exception $e) {
         logMessage($e->getMessage());
+        logMessage("Could not enew SSL for $domain.");
       }
-      try {
-        shell_exec("rm $cert_symlink");
-      } catch (Exception $e) {
-        logMessage($e->getMessage());
-      }
-      logMessage("Removed SSL for $domain.");
     } else {
       if(LOG_LEVEL == 'all') { logMessage("$domain has valid certificate."); }
     }
     if(LOG_LEVEL == 'all') { logMessage("Finished checking $domain."); }
   }
 }
-if(LOG_LEVEL == 'all') { logMessage("Finished removing certificates that can't renew..."); }
+if(LOG_LEVEL == 'all') { logMessage("Finished renewing certificates..."); }
