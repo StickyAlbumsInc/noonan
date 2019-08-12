@@ -84,7 +84,7 @@ if(!empty($pids)) {
         // next time. 
         if(LOG_LEVEL == 'all') { logMessage("Getting certificate for $domain..."); }
 
-        $shell = shell_exec("certbot certonly --nginx -n -d=$domain 2>&1");
+        $shell = shell_exec("certbot certonly -a webroot --webroot-path=/var/www/letsencrypt -m kelli@stickyfolios.com --agree-tos -d=$domain 2>&1");
 
         if(LOG_LEVEL == 'all') { logMessage($shell); }
         if(LOG_LEVEL == 'all') { logMessage("Done getting certificate for $domain."); }
